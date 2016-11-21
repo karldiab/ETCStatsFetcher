@@ -1,8 +1,10 @@
 var request = require('request');
-var events = require('events');
-var eventEmitter = new events.EventEmitter();
+
+var EventEmitter = require("events").EventEmitter;
+//var theEvent = new EventEmitter();
+
 var ETCStatsFetcher = function() {
-    events.EventEmitter.call(this);
+    this.ee = new EventEmitter();
     this.currentBlockNo;
     this.currentDiff;
     this.blockTime;
@@ -24,6 +26,9 @@ ETCStatsFetcher.prototype.fetchBlocks = function() {
     this.currentBlock = null;
     this.blockTimeBlock = null;
     this.diffChangeBlock = null;
+    this.blockTime = null;
+    this.diffChange = null;
+    this.BTCETCPrice = null;
     var self = this;
     request('https://etcchain.com/gethProxy/eth_blockNumber', function (error, response, body) {
     if (!error && response.statusCode == 200) {
@@ -58,14 +63,21 @@ ETCStatsFetcher.prototype.fetchBlocks = function() {
 ETCStatsFetcher.prototype.calculateBlockTime = function() {
     if (this.currentBlock !== null && this.blockTimeBlock !== null) {
         this.blockTime = (parseInt(this.currentBlock.timestamp) - parseInt(this.blockTimeBlock.timestamp))/this.blockTimeFactor;
-        this.emit('statsFetched');
-        //console.log("blocktime = " + this.blockTime);
+        this.syncStats();
     }
 }
 ETCStatsFetcher.prototype.calculateDiffChange = function() {
     if (this.currentBlock !== null && this.diffChangeBlock !== null) {
         this.diffChange = (parseInt(this.currentBlock.difficulty) - parseInt(this.diffChangeBlock.difficulty))/this.diffChangeFactor;
-        //console.log("diffChange = " + this.diffChange);
+        this.syncStats();
+    }
+}
+//ensures all stats are found before emiting event
+ETCStatsFetcher.prototype.syncStats = function() {
+    if (this.blockTime !== null && this.diffChange !== null) {
+        this.statsObject = {"number" : this.currentBlockNo,
+        "difficulty" : this.currentDiff , "blockTime" : this.blockTime, "diffChange" : this.diffChange}
+        this.ee.emit('statsFetched');
     }
 }
 ETCStatsFetcher.prototype.fetchPrice = function() {
@@ -101,8 +113,8 @@ ETCStatsFetcher.prototype.calculatePrice = function() {
             console.log(this.prices[currentCurrency]);*/
         }
         //console.log(this.prices);
-        this.emit('pricesFetched');
+        this.ee.emit('pricesFetched');
     }
 }
 
-module.exports = { blockObject : new ETCStatsFetcher()};
+module.exports = ETCStatsFetcher;
