@@ -2,24 +2,32 @@
 var priceTable = 'karldiab_coinStats.ETC_Price';
 var statsTable = 'karldiab_coinStats.ETC_Stats';
 var password = require("./password.js");
-var connection = password[0];
+var pool = password[0];
 var ETCStatsFetcher = require("./fetchStats.js");
 var DBInserter = require("./insertToDB.js");
 var mysql = require('mysql');
+var startTime = new Date();
 
 
-connection.connect();
 
 function fetchAndInsert() {
     console.log("Attempting to fetch and insert ETC data");
+    /*connection.end(function(err) { 
+        // The connection is terminated now 
+    });*/
+    /*connection.connect(function(err) { 
+        if (err) { 
+            console.error('error connecting: ' + err.stack);
+        }
+    })*/
     var fetcher = new ETCStatsFetcher();
     fetcher.ee.on('pricesFetched', function() {
-        DBInserter(connection, produceInsertString(fetcher.prices, priceTable))
+        DBInserter(pool, produceInsertString(fetcher.prices, priceTable))
     })
     fetcher.ee.on('statsFetched', function() {
-        DBInserter(connection, produceInsertString(fetcher.statsObject, statsTable))
+        DBInserter(pool, produceInsertString(fetcher.statsObject, statsTable))
     })
-    setTimeout(fetchAndInsert, 60000);
+    setTimeout(fetchAndInsert, 300000);
 }
 fetchAndInsert();
 

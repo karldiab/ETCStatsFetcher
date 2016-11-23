@@ -37,7 +37,7 @@ ETCStatsFetcher.prototype.fetchBlocks = function() {
         request('https://etcchain.com/gethProxy/eth_getBlockByNumber?number=' + self.currentBlockNo, function (error, response, body) {
         if (!error && response.statusCode == 200) {
             self.currentBlock = JSON.parse(body);
-            self.currentDiff = (parseInt(self.currentBlock.difficulty,16)); 
+            self.currentDiff = (parseInt(self.currentBlock.difficulty,16)/1000000000000); 
             //console.log("Got currentDiff, it is " + self.currentDiff);
             self.calculateBlockTime();
             self.calculateDiffChange();
@@ -54,6 +54,7 @@ ETCStatsFetcher.prototype.fetchBlocks = function() {
         if (!error && response.statusCode == 200) {
             //console.log("Got diffChangeBlock");
             self.diffChangeBlock = JSON.parse(body);
+            //console.log(parseInt(self.diffChangeBlock.difficulty),16);
             self.calculateDiffChange();
         }
         })
@@ -68,7 +69,7 @@ ETCStatsFetcher.prototype.calculateBlockTime = function() {
 }
 ETCStatsFetcher.prototype.calculateDiffChange = function() {
     if (this.currentBlock !== null && this.diffChangeBlock !== null) {
-        this.diffChange = (parseInt(this.currentBlock.difficulty) - parseInt(this.diffChangeBlock.difficulty))/this.diffChangeFactor;
+        this.diffChange = ((parseInt(this.currentBlock.difficulty) - parseInt(this.diffChangeBlock.difficulty)))/1000000000000;
         this.syncStats();
     }
 }
